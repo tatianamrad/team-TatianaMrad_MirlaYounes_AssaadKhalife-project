@@ -1,19 +1,22 @@
 """
-reset_db.py  --  (re)create the database tables for LOCAL development.
+reset_db.py -- (Re)create and seed all tables from models.py for local development.
 
-Run it whenever you change your models in models.py:
+Run locally with:
     python reset_db.py
 
-WARNING: it drops all tables first, so you lose any local data. That's fine
-during development. On Render, the app creates the tables automatically when
-it starts (db.create_all() in app.py) - you do NOT run this script there.
-To change the schema on Render after it exists, drop the table in the
-database's PSQL console, then restart the service.
+On Render (PostgreSQL), app.py automatically runs db.create_all() and
+seed_database() at startup without dropping existing production data.
 """
+import os
+
+os.environ["SKIP_STARTUP_SEED"] = "1"
+
 from app import app
 from models import db
+from seed_data import seed_database
 
 with app.app_context():
     db.drop_all()
     db.create_all()
-    print("Database reset: all tables created from models.py.")
+    seed_database()
+    print("Database reset: all 3a2belkon tables created and seeded from models.py.")
