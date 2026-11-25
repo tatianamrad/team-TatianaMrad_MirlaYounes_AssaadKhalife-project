@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% block title %}My Profile — 3a2belkon (عقْبَالْكُن){% endblock %}
+{% block extra_css %}
+  <style>
+    .profile-main {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 38px clamp(16px, 3.5vw, 36px) 72px;
+      min-height: calc(100vh - 150px);
+    }
+
+    .profile-hero-card {
+      background: linear-gradient(135deg, var(--cedar) 0%, var(--cedar-dark) 100%);
+      color: #FFFFFF;
+      border-radius: 10px;
+      padding: 26px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .profile-hero-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar-lg {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .profile-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 26px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .profile-card h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.28rem;
+      color: var(--ink);
+    }
+
+    .connected-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 15px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    @media (max-width: 860px) {
+      .profile-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+{% endblock %}
+
+{% block skip_link %}
+  <a href="#mainContent" class="skip-link">Skip to profile settings</a>
+{% endblock %}
+
+{% block header_right %}
+  <div class="currency-switch" role="group" aria-label="Display currency">
+    <button type="button" class="curr-btn active" data-curr="USD" onclick="setProfileCurrency('USD')">$ USD</button>
+    <button type="button" class="curr-btn" data-curr="LBP" onclick="setProfileCurrency('LBP')">LBP ل.ل.</button>
+  </div>
+  <div class="header-auth-slot" id="headerAccountSlot"></div>
+{% endblock %}
+
+{% block content %}
+  <main class="profile-main" id="mainContent">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div role="alert" style="margin-bottom:16px; padding:11px 15px; border-radius:6px; background:var(--booked-bg); color:var(--booked-ink); border:1px solid #F2C6C2; font-size:0.85rem; font-weight:600;">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <header class="profile-hero-card">
+      <div class="profile-hero-left">
+        <span class="profile-avatar-lg" id="profAvatarInitials" aria-hidden="true"></span>
+        <div>
+          <span class="spaced-caps" style="color:var(--brass-light); font-size:0.66rem;">Couple Profile &amp; Account</span>
+          <h1 id="profHeroName" style="font-family:var(--serif); font-weight:400; font-size:1.75rem; margin-top:2px;"></h1>
+          <p id="profHeroSub" style="font-size:0.86rem; opacity:0.9;"></p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="{{ url_for('planning.couple_dashboard') }}" class="preset-tag" style="padding:8px 15px;">Open Planning Dashboard</a>
+        <a href="{{ url_for('public.venues_map') }}" class="preset-tag" style="padding:8px 15px;">Browse Venues</a>
+      </div>
+    </header>
+
+    <div class="profile-grid">
+      <!-- LEFT: WEDDING & PROFILE DETAILS -->
+      <section class="profile-card" aria-labelledby="weddingDetailsHeading">
+        <div>
+          <h2 id="weddingDetailsHeading">Wedding &amp; Couple Details</h2>
+          <p style="font-size:0.83rem; color:var(--muted);">Update your names, celebration date, region, and target wedding budget.</p>
+        </div>
+
+        <form onsubmit="saveProfileDetails(event)" style="display:flex; flex-direction:column; gap:13px;">
+          <div class="field">
+            <label for="profCoupleNames">Couple Names</label>
+            <input type="text" id="profCoupleNames" autocomplete="name" required />
+          </div>
+
+          <div class="field">
+            <label for="profEmailReadonly">Account Email</label>
+            <input type="email" id="profEmailReadonly" autocomplete="email" readonly style="opacity:0.78; cursor:default;" />
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="field">
+              <label for="profWeddingDate">Celebration Date</label>
+              <input type="date" id="profWeddingDate" required />
+            </div>
+            <div class="field">
+              <label for="profRegion">Preferred Region</label>
+              <select id="profRegion">
+                <option value="Byblos">Byblos</option>
+                <option value="Keserwan">Keserwan</option>
+                <option value="Batroun">Batroun</option>
+                <option value="Beirut">Beirut</option>
+                <option value="Mount Lebanon">Mount Lebanon</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1.3fr 0.7fr; gap:12px;">
+            <div class="field">
+              <label for="profBudget">Target Total Budget</label>
+              <input type="number" id="profBudget" min="500" step="500" required />
+            </div>
+            <div class="field">
+              <label for="profBudgetCurrency">Currency</label>
+              <select id="profBudgetCurrency" onchange="syncProfBudgetCurrency()">
+                <option value="USD">USD ($)</option>
+                <option value="LBP">LBP (ل.ل.)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+            <button type="submit" class="btn-cedar" id="saveProfBtn">Save Changes</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- RIGHT: SIGN-IN METHODS, PASSWORD & INVITATION LINK -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <section class="profile-card" aria-labelledby="connectedHeading">
+          <h2 id="connectedHeading">Connected Sign-In</h2>
+          <div class="connected-row">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+              </svg>
+              <div>
+                <strong style="font-size:0.86rem;">Google Account</strong>
+                <div id="googleLinkSubtext" style="font-size:0.75rem; color:var(--muted);"></div>
+              </div>
+            </div>
+            <div id="googleLinkAction"></div>
+          </div>
+
+          <div style="border-top:1px solid var(--line); padding-top:12px;">
+            <strong style="font-size:0.84rem; display:block; margin-bottom:4px;">Private Guest RSVP Link</strong>
+            <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Share this invitation link with your guests to collect attendance and dietary preferences.</p>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="profRsvpUrlInput" readonly aria-label="Your guest RSVP invitation link" style="flex:1; padding:8px 10px; border:1px solid var(--line-strong); border-radius:4px; background:var(--paper); font-size:0.8rem;" />
+              <button type="button" class="btn-ghost" style="padding:8px 13px; font-size:0.8rem;" onclick="copyRsvpLink()">Copy Link</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-card" aria-labelledby="securityHeading">
+          <h2 id="securityHeading">Password &amp; Security</h2>
+          <form onsubmit="submitPasswordChange(event)" style="display:flex; flex-direction:column; gap:11px;">
+            <div class="field" id="currentPwFieldWrap">
+              <label for="profCurrentPw">Current Password</label>
+              <input type="password" id="profCurrentPw" autocomplete="current-password" placeholder="Enter current password" />
+            </div>
+            <div class="field">
+              <label for="profNewPw" id="profNewPwLabel">New Password</label>
+              <input type="password" id="profNewPw" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Minimum 8 characters" required />
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:4px; flex-wrap:wrap;">
+              <button type="button" class="btn-ghost" style="color:var(--booked-ink); border-color:#F2C6C2;" onclick="signOutEverywhere('/')">Sign Out</button>
+              <button type="submit" class="btn-cedar" id="savePwBtn">Update Password</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function renderProfilePage() {
+      renderHeaderAccountSlot({ signOutRedirect: "/" });
+      const w = currentWedding();
+      if (!w) return;
+
+      document.getElementById("profAvatarInitials").textContent = coupleInitials(w.couple);
+      document.getElementById("profHeroName").textContent = w.couple;
+      document.getElementById("profHeroSub").textContent = `${w.email} · ${w.city} · ${w.date}`;
+
+      document.getElementById("profCoupleNames").value = w.couple;
+      document.getElementById("profEmailReadonly").value = w.email;
+      document.getElementById("profWeddingDate").value = w.date;
+      document.getElementById("profRegion").value = w.city;
+      document.getElementById("profBudgetCurrency").value = app.currency;
+      syncProfBudgetCurrency();
+
+      const fullRsvp = `${window.location.origin}/rsvp/${w.rsvpToken}`;
+      document.getElementById("profRsvpUrlInput").value = fullRsvp;
+
+      const gSub = document.getElementById("googleLinkSubtext");
+      const gAct = document.getElementById("googleLinkAction");
+      if (w.googleLinked) {
+        gSub.textContent = "Connected to your Google profile";
+        gAct.innerHTML = `<span class="pill pill-green">Connected</span>`;
+      } else {
+        gSub.textContent = "Connect Google for one-click sign-in";
+        gAct.innerHTML = `<a href="{{ url_for('auth.google_login', next='/profile') }}" class="btn-ghost" style="padding:6px 12px; font-size:0.78rem;">Connect</a>`;
+      }
+
+      const curWrap = document.getElementById("currentPwFieldWrap");
+      const newLbl = document.getElementById("profNewPwLabel");
+      if (w.hasPassword) {
+        curWrap.style.display = "flex";
+        newLbl.textContent = "New Password";
+      } else {
+        curWrap.style.display = "none";
+        newLbl.textContent = "Set Account Password";
+      }
+    }
+
+    function syncProfBudgetCurrency() {
+      const w = currentWedding();
+      const baseUsd = w ? w.budgetUsd : 35000;
+      const curr = document.getElementById("profBudgetCurrency").value;
+      const inp = document.getElementById("profBudget");
+      if (curr === "LBP") {
+        inp.value = Math.round(baseUsd * app.lbpRate);
+        inp.step = "10000000";
+      } else {
+        inp.value = Math.round(baseUsd);
+        inp.step = "500";
+      }
+    }
+
+    async function setProfileCurrency(curr) {
+      const { data } = await apiPost("/preferences/currency", { currency: curr });
+      if (data.ok) {
+        app.currency = data.currency;
+        renderProfilePage();
+      }
+    }
+
+    async function saveProfileDetails(e) {
+      e.preventDefault();
+      const btn = document.getElementById("saveProfBtn");
+      btn.disabled = true;
+      try {
+        const payload = {
+          couple_names: document.getElementById("profCoupleNames").value.trim(),
+          wedding_date: document.getElementById("profWeddingDate").value,
+          city: document.getElementById("profRegion").value,
+          budget_total: Number(document.getElementById("profBudget").value) || 35000,
+          currency: document.getElementById("profBudgetCurrency").value
+        };
+        const { data } = await apiPost("/wedding/update", payload);
+        if (data.ok && data.couple) {
+          app.couple = data.couple;
+          app.currency = payload.currency;
+          renderProfilePage();
+          toast("Profile saved.");
+        } else {
+          toast(data.error || "Could not update profile.");
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function submitPasswordChange(e) {
+      e.preventDefault();
+      const btn = document.getElementById("savePwBtn");
+      btn.disabled = true;
+      try {
+        const { data } = await apiPost("/profile/password", {
+          current_password: document.getElementById("profCurrentPw").value,
+          new_password: document.getElementById("profNewPw").value
+        });
+        if (data.ok && data.couple) {
+          app.couple = data.couple;
+          document.getElementById("profCurrentPw").value = "";
+          document.getElementById("profNewPw").value = "";
+          renderProfilePage();
+          toast("Password updated.");
+        } else {
+          toast(data.error || "Could not update password.");
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function copyRsvpLink() {
+      const inp = document.getElementById("profRsvpUrlInput");
+      if (navigator.clipboard && inp.value) {
+        navigator.clipboard.writeText(inp.value);
+        toast("Guest RSVP link copied.");
+      }
+    }
+
+    renderProfilePage();
+  </script>
+{% endblock %}
